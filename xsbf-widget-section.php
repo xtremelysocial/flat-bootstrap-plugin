@@ -11,28 +11,41 @@ add_action( 'widgets_init', create_function('', 'return register_widget("XS_Sect
 class XS_Section_Widget extends WP_Widget {
 
 	/** 
-	 * Instantiate the widget
+	 * This function gets called automatically when a new widget instance is created
 	 */
-	function XS_Section_Widget() {
-		$widget_ops = array('classname' => 'XS_Section_Widget', 'description' => __( "Call to action with text and button") );
-		$this->WP_Widget('xs-section', __('FB Colored Section'), $widget_ops);
-		$this->alt_option_name = 'xs_section';
-	}
-	
+	public function __construct() {
+		parent::__construct(
+	 		'XS_Section_Widget',
+			'FB Colored Section',
+			array( 'description' => __( 'Colored section with optional call to action button' ) 
+			)
+		);
+	 }
+		
 	/**
-	 * Note that protected variable declarations at the very end due to their length
+	 * Declare some protected variables. These can be overriden if a new class
+	 * is created but don't want them to be public outside the class to avoid
+	 * conflict with other plugins.
 	 */
+	 
+	// Our color palette (colors renamed from Flat UI palette)
 	protected $colors = array ( '', 'white', 'offwhite', 'lightgray', 'gray', 'darkgray', 'lightgreen', 'darkgreen', 'brightgreen', 'darkbrightgreen', 'yellow', 'lightorange', 'orange', 'darkorange', 'blue', 'darkblue', 'purple', 'darkpurple', 'midnightblue', 'darkmidnightblue', 'red', 'brightred', 'darkred', 'almostblack', 'notquiteblack', 'black' );
 
+	// WordPress core theme (_S)
 	protected $alignments = array( '', 'left', 'center', 'right' );
 	
-	protected $styles = array( 'btn-primary', 'btn-success', 'btn-info', 'btn-warning', 'btn-danger', 'btn-hollow', 'btn-transparent', 'btn-default', 'btn-link' ); 
+	// Bootstrap v3.3.2 (http://getbootstrap.com) plus our btn-hollow and btn-transparent	
+	protected $styles = array( 'primary', 'success', 'info', 'warning', 'danger', 'hollow', 'transparent', 'default', 'link' ); 
 
-	
 	/** 
 	 * Main function to display the widget on the front-end
 	 */
-	function widget($args, $instance) {
+	public function widget($args, $instance) {
+	
+		if ( !$instance ) {
+			echo 'Trying to build the section contents...<br />'; //TEST
+			echo 'args=' . print_r ( $args ) . '<br />'; //TEST
+		}
 	    
 		// Get widget area settings, such as before/after widget, before/after title
 	    extract( $args );
@@ -57,7 +70,7 @@ class XS_Section_Widget extends WP_Widget {
 			echo '</div><!-- container -->';		
 			$container_needed = true;
 		// Otherwise, if a background color is selected, then need to add padding
-		} elseif ( $bgcolor ) {
+		} elseif ( $name AND $bgcolor ) {
 			$padding_needed = true;
 		} //endif $name
 
@@ -71,7 +84,7 @@ class XS_Section_Widget extends WP_Widget {
 		if ( $title ) echo $before_title . $title . $after_title;
 		if ( $subtitle ) echo '<h3>' . $subtitle . '</h3>'; 
 		if ( $text ) echo '<p>' . $text . '</p>'; 
-		if ( $btn_url AND $btn_text ) echo '<p><a href="' . $btn_url . '" class="btn btn-lg ' . $btn_style .'">' . $btn_text . '</a></p>'; 
+		if ( $btn_url AND $btn_text ) echo '<p><a href="' . $btn_url . '" class="btn btn-lg btn-' . $btn_style .'">' . $btn_text . '</a></p>'; 
 		if ( $container_needed ) echo '</div><!-- container -->';
 		echo '</div><!-- section -->';
 
@@ -82,7 +95,7 @@ class XS_Section_Widget extends WP_Widget {
 	/** 
 	 * This function updates the widget settings to the database
 	 */
-	function update( $new_instance, $old_instance ) {
+	public function update( $new_instance, $old_instance ) {
 	
 		$instance = $old_instance;
 		$instance['title'] = strip_tags($new_instance['title']);
@@ -108,7 +121,7 @@ class XS_Section_Widget extends WP_Widget {
 	/** 
 	 * This function displays the widget settings form
 	 */
-	function form( $instance ) {
+	public function form( $instance ) {
 	
 		// Parse incoming variables
 		$title = strip_tags($instance['title']);
@@ -177,4 +190,47 @@ class XS_Section_Widget extends WP_Widget {
 
 	<?php
 	} // endfunction
+	
+	/**
+	 * Create the [flat_bootstrap_section] shortcode
+	 */
+	public function xs_section_widget_shortcode( $atts ) {
+
+		$defaults = array (
+			'title' => '',
+			'subtitle' => '',
+			'bgcolor' => '',
+			'alignment' => 'center',
+			'text' => '',
+			'btn_text' => '',
+			'btn_style' => 'primary',
+			'btn_url' => ''
+		);
+		$args = shortcode_atts( $defaults, $atts, 'flat_bootstrap_section' );
+		
+		// To help users with "debugging" use of this shortcode, default in some
+		// text if they didn't fill out the parameters correctly.
+		if ( !$args['title'] AND !$args['subtitle'] AND !$args['text'] ) $args['text'] = __( 'You need to add some parameters, such as &lbrack;flat_bootstrap_section title="MY TITLE" subtitle="My Subtitle" text="This is just an example"&rbrack;' );
+	
+		// Since the widget uses "echo", collect up all that to return at the end
+		ob_start();
+
+		// The first parameter to the widget is the default widget area fields
+		// such as before_widget, before_title, etc. We don't need that. The
+		// second parameter is the actual shortcode arguments to use to build
+		// the widget.
+		$xs_section_widget = new XS_Section_Widget();
+		$widget_area_defaults = null;
+		//$xs_section_widget->widget( $args, $instance );
+		$xs_section_widget->widget( $widget_area_defaults, $args );
+
+		// Take the echo'd output, flush the buffer, and return the output
+		$return = ob_get_contents();	
+		ob_end_clean();
+		return $return;
+
+	} //endfunction
+	
 } //endclass
+
+add_shortcode( 'flat_bootstrap_section', array( 'XS_Section_Widget', 'xs_section_widget_shortcode' ) );

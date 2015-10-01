@@ -72,14 +72,14 @@ if ( $xsbf_plugin_options['quicktags'] ) {
 */
 
 /*
- * Load our call-to-action widget
+ * Load our colored section widget and [flat_bootstrap_section] shortcode
  */
 if ( $xsbf_plugin_options['widget-section'] ) {
 	include_once( 'xsbf-widget-section.php' );
 }
 
 /*
- * Load our columns widget
+ * Load our icon columns widget and [flat_bootstrap_columns] shortcode
  */
 if ( $xsbf_plugin_options['widget-columns'] ) {
 	include_once( 'xsbf-widget-columns.php' );
