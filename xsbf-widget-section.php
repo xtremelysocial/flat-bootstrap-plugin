@@ -6,6 +6,11 @@
 add_action( 'widgets_init', create_function('', 'return register_widget("XS_Section_Widget");') );
 
 /**
+ * Tell WordPress to allow the [flat_bootstrap_section] shortcode
+ */
+add_shortcode( 'flat_bootstrap_section', array( 'XS_Section_Widget', 'xs_section_widget_shortcode' ) );
+
+/**
  * Our class to handle the widget
  */
 class XS_Section_Widget extends WP_Widget {
@@ -69,9 +74,14 @@ class XS_Section_Widget extends WP_Widget {
 		if ( $name == 'Page Top' OR $name == 'Page Bottom' ) {
 			echo '</div><!-- container -->';		
 			$container_needed = true;
+
 		// Otherwise, if a background color is selected, then need to add padding
 		} elseif ( $name AND $bgcolor ) {
 			$padding_needed = true;
+
+		// Otherwise, this is being called from a shortcode and we need a container
+		} else {
+			$container_needed = true;
 		} //endif $name
 
 		// Display the widget title and other fields		
@@ -216,12 +226,16 @@ class XS_Section_Widget extends WP_Widget {
 		ob_start();
 
 		// The first parameter to the widget is the default widget area fields
-		// such as before_widget, before_title, etc. We don't need that. The
-		// second parameter is the actual shortcode arguments to use to build
-		// the widget.
+		// such as before_widget, before_title, etc. We need to mirror the 
+		// settings from the actual Page Top widget area. The second parameter 
+		// is the actual shortcode arguments to use to build the widget content.
+		$widget_area_defaults = array(
+			'before_widget' => '<div class="widget widget_xs_column_widget clearfix">',
+			'before_title' 	=> '<h2 class="widget-title">',
+			'after_title' 	=> '</h2>',
+			'after_widget' 	=> '</div>',
+		);
 		$xs_section_widget = new XS_Section_Widget();
-		$widget_area_defaults = null;
-		//$xs_section_widget->widget( $args, $instance );
 		$xs_section_widget->widget( $widget_area_defaults, $args );
 
 		// Take the echo'd output, flush the buffer, and return the output
@@ -232,5 +246,3 @@ class XS_Section_Widget extends WP_Widget {
 	} //endfunction
 	
 } //endclass
-
-add_shortcode( 'flat_bootstrap_section', array( 'XS_Section_Widget', 'xs_section_widget_shortcode' ) );

@@ -3,21 +3,29 @@
 /** 
  * Tell WordPress to instantiate this widget
  */
-add_action( 'widgets_init', create_function('', 'return register_widget("XS_Colums_Widget");') );
+add_action( 'widgets_init', create_function('', 'return register_widget("XS_Columns_Widget");') );
+
+/**
+ * Tell WordPress to allow the [flat_bootstrap_columns] shortcode
+ */
+add_shortcode( 'flat_bootstrap_columns', array( 'XS_Columns_Widget', 'xs_columns_widget_shortcode' ) );
 
 /**
  * Our class to handle the widget
  */
-class XS_Colums_Widget extends WP_Widget {
-
+class XS_Columns_Widget extends WP_Widget {
+	
 	/** 
-	 * Instantiate the widget
+	 * This function gets called automatically when a new widget instance is created
 	 */
-	function XS_Colums_Widget() {
-		$widget_ops = array('classname' => 'XS_Colums_Widget', 'description' => __( "Columns with icons") );
-		$this->WP_Widget('xs-columns', __('FB Icon Columns'), $widget_ops);
-		$this->alt_option_name = 'xs_columns';
-	}
+	public function __construct() {
+		parent::__construct(
+	 		'XS_Columns_Widget',
+			'FB Columns Widget',
+			array( 'description' => __( 'Colored section with columns of icons and/or text' ) 
+			)
+		);
+	 }
 	
 	/**
 	 * Note that protected variable declarations at the very end due to their length.
@@ -62,15 +70,21 @@ class XS_Colums_Widget extends WP_Widget {
 		// Output the widget
 		echo $before_widget;
 		
-		// If Page Top or Page Bottom Widget area, then kill off container and add it
-		// later after the colored section div
+		// If Page Top or Page Bottom Widget area, then kill off container and
+		// add it later after the colored section div
+		// TO-DO: For shortcode, check whether full-width page!
 		$container_needed = $padding_needed = false;
 		if ( $name == 'Page Top' OR $name == 'Page Bottom' ) {
 			echo '</div><!-- container -->';		
 			$container_needed = true;
-		// Otherwise, if a background color is selected, then should add padding
-		} elseif ( $bgcolor ) {
+
+		// Otherwise, if a background color is selected, then need to add padding
+		} elseif ( $name AND $bgcolor ) {
 			$padding_needed = true;
+
+		// Otherwise, this is being called from a shortcode and we need a container
+		} else {
+			$container_needed = true;
 		} //endif $name
 
 		// Display the widget title and other fields		
@@ -85,30 +99,36 @@ class XS_Colums_Widget extends WP_Widget {
 		if ( $subtitle ) echo '<h3>' . $subtitle . '</h3>'; 
 		if ( $text ) echo '<p>' . $text . '</p>'; 
 
-		if ( $btn_url AND $btn_text ) echo '<p><a href="' . $btn_url . '" class="btn btn-lg ' . $btn_style .'">' . $btn_text . '</a></p>'; 
+		if ( $btn_url AND $btn_text ) echo '<p><a href="' . $btn_url . '" class="btn btn-lg btn-' . $btn_style .'">' . $btn_text . '</a></p>'; 
 
 		// First count which columns are not empty, so we can adjust the grid
-		$num_columns = 0;
+		$num_columns = 0; $col_title_or_text = false;
 		for ($col = 1; $col <= $this->max_columns; $col++) {
 			if ( $col_title[$col] OR $col_subtitle[$col] OR $col_text[$col] OR $col_icon[$col] ) $num_columns++;
+			if ( $col_title[$col] OR $col_subtitle[$col] OR $col_text[$col] ) $col_title_or_text = true;
 		} //endfor
 		//$num_columns = 4; // TEST
+		
+		// Set the Bootstrap grid column class based on number of columns. For 4 
+		// columns where we have a title or text, make it 2 column on iPad.
+		if ( $num_columns = 4 AND $col_title_or_text ) $col_style = 'col-sm-6 col-lg-3 centered';
+		else $col_style = 'col-sm-' . ( 12 / $num_columns ) . ' centered';
 
 		// Loop through all columns and apply Bootstrap grid to them
 		for ($col = 1; $col <= $this->max_columns; $col++) {
 			if ( $col == 1 ) echo '<div class="row">';
 			
 			if ( $col_title[$col] OR $col_subtitle[$col] OR $col_text[$col] OR $col_icon[$col] ) {
-				echo '<div class="col-sm-' . ( 12 / $num_columns ) . ' centered">';
+				echo '<div class="' . $col_style . '">';
 
 				if ( $col_title[$col] ) echo '<h2>' . $col_title[$col] . '</h2>';
 				if ( $col_url[$col] AND $col_icon[$col] ) {
 					echo '<a href="' . $col_url[$col] 
-						. '" class="fa fa-4x fa-' . $col_icon[$col]
+						. '" class="fa icon-xlg fa-' . $col_icon[$col]
 						.( $icon_color ? ' color-' . $icon_color : '' )
 						. '"></a>';
 				} elseif ( $col_icon[$col] ) {
-					echo '<i class="fa fa-4x fa-' . $col_icon[$col] 
+					echo '<i class="fa icon-xlg fa-' . $col_icon[$col] 
 									.( $icon_color ? ' color-' . $icon_color : '' )
 									. '"></i>';			
 				} //endif $col_url
@@ -298,8 +318,8 @@ class XS_Colums_Widget extends WP_Widget {
 	 * Declare some protected variables for use in our class functions
 	 */
 
-	// Set the maximum number of columns to support. Start with 4 but could be up to 6
-	// and still fit the Bootstrap grid.
+	// Set the maximum number of columns to support. Start with 4 but could be
+	// up to 6 and still fit the Bootstrap grid.
 	protected $max_columns = 4;
 
 	// Our color palette (colors renamed from Flat UI palette)
@@ -309,7 +329,7 @@ class XS_Colums_Widget extends WP_Widget {
 	protected $alignments = array( '', 'left', 'center', 'right' );
 	
 	// Bootstrap v3.3.2 (http://getbootstrap.com) plus our btn-hollow and btn-transparent	
-	protected $styles = array( 'btn-primary', 'btn-success', 'btn-info', 'btn-warning', 'btn-danger', 'btn-hollow', 'btn-default', 'btn-link' ); 
+	protected $styles = array( 'primary', 'success', 'info', 'warning', 'danger', 'hollow', 'default', 'link' ); 
 
 	// Font Awesome 4.3.0 by @davegandy - http://fontawesome.io - @fontawesome
 	protected $icons = array( 
@@ -908,4 +928,68 @@ class XS_Colums_Widget extends WP_Widget {
 		'youtube-play', 
 		'youtube-square' 
 		); 
+
+	/**
+	 * Create the [flat_bootstrap_section] shortcode
+	 */
+	public function xs_columns_widget_shortcode( $atts ) {
+	
+		//ini_set ( 'display_errors', 1 ); //TEST
+
+		// Create a widget instance
+		$xs_columns_widget = new XS_Columns_Widget();
+
+		$defaults = array (
+			'title' => '',
+			'subtitle' => '',
+			'bgcolor' => '',
+			'alignment' => 'center',
+			'text' => '',
+			'icon_color' => '',
+			'btn_text' => '',
+			'btn_style' => 'primary',
+			'btn_url' => ''
+		);
+
+		// Loop through this for each column
+		for ($col = 1; $col <= $xs_columns_widget->max_columns; $col++) {
+			$defaults['col_title_' . $col] = ''; 
+			$defaults['col_subtitle_' . $col] = '';
+			$defaults['col_text_' . $col] = '';
+			$defaults['col_icon_' . $col] = '';
+			$defaults['col_url_' . $col] = '';
+		} //endfor
+
+		$args = shortcode_atts( $defaults, $atts, 'flat_bootstrap_columns' );
+		//print_r( $args ); //TEST
+		
+		// To help users with "debugging" use of this shortcode, default in some
+		// text if they didn't fill out the parameters correctly.
+		if ( !$args['title'] AND !$args['subtitle'] AND !$args['text'] ) $args['text'] = __( 'You need to add some parameters, such as &lbrack;flat_bootstrap_columns title="MY TITLE" subtitle="My Subtitle" text="This is just an example"&rbrack;' );
+	
+		// Since the widget uses "echo", collect up all that to return at the end
+		ob_start();
+
+		// The first parameter to the widget is the default widget area fields
+		// such as before_widget, before_title, etc. We need to mirror the 
+		// settings from the actual Page Top widget area. The second parameter 
+		// is the actual shortcode arguments to use to build the widget content.
+		$widget_area_defaults = array(
+			'before_widget' => '<div class="widget widget_xs_section_widget clearfix">',
+			'before_title' 	=> '<h2 class="widget-title">',
+			'after_title' 	=> '</h2>',
+			'after_widget' 	=> '</div>',
+		);
+		$xs_columns_widget->widget( $widget_area_defaults, $args );
+
+		// Take the echo'd output, flush the buffer, and return the output
+		$return = ob_get_contents();	
+		ob_end_clean();
+		
+		//ini_set ( 'display_errors', 0 ); //TEST
+
+		return $return;
+
+	} //endfunction
+	
 } //endclass
