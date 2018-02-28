@@ -1,86 +1,155 @@
 <?php
 /**
 Plugin Name: Flat Bootstrap
-Plugin URI: http://xtremelysocial.com/wordpress/flat-plugin/
-Description: This plugin adds enhancements to our various Flat Bootstrap themes as well as any Bootstrap-based theme. Features include: "Quicktags" to easily add Bootstrap HTML for various components, such as buttons, carousels, etc; XYZ...
-Author: Tim Nicholson
-Version: 1.0
-Author URI: http://xtremelysocial.com
-**/
+Plugin URI:  http://xtremelysocial.com/wordpress/flat-bootstrap-plugin/
+Description: Add awesome colored backgrounds to your widgets with various padding options to make your widget areas look great.
+Author: 	 Tim Nicholson
+Author URI:  http://xtremelysocial.com
+Version: 	 1.0
+License: 	 GNU General Public License
+License URI: http://www.opensource.org/licenses/GPL-3.0
+
+Flat Bootstrap Plugin, Copyright (C) 2015 XtremelySocial
+Flat Bootstrap Plugin is licensed under the GPL.
+See readme.txt file for license information on components used in this theme.
+*/
 
 /**
- * SET PLUGIN OPTIONS HERE
+ * SET PLUGIN OPTIONS
  *
  * These can be overrided in your own plugin or theme's function.php file by setting
  * values in $xsbf_plugin_options. Your values will be merged with the defaults.
  * 
- * Parameters:
- * css - Full path to the CSS file to style the plugin features. Only loads if one of our
- * 		Flat Bootstrap themes's is not being used.
- * 
- * quicktags - Add quicktags to the WordPress editor.
- * 
- * widget-section - Load our colored section / call-to-action widget
- * 
- * widget-columns - Load our columns / icon widget
- */
+*/
 $xsbf_plugin_defaults = array(
-	//////'css'				=> 'css/theme-flat.css',
-	//////'css'				=> null,
-	/////'quicktags'			=> false,
-	'widget-section'	=> true,
-	'widget-columns'	=> true
+
+	// Full file names (including .php) of modules within this plugin to include
+	'modules' => array (
+		'xsbf-widget-css.php',
+		//'xsbf-widget-section.php', // now use standard text box instead
+		'xsbf-widget-columns.php',
+		'xsbf-widget-call-to-action.php'
+	),
+
+	// Main class(es) to always add to the outer widget <div> (or <aside>). This is just
+	// here in case someone wants to use it. 
+	'widget_classes' 					=> '',
+
+	// Class(es) to always add to the heading (h1, h2, etc.)  This is just here in case
+	// someone wants to use it. 
+	'heading_classes' 					=> '',
+
+	// Our flat color palette (colors renamed from Flat UI palette and additional ones
+	// added)
+	'bg_prefix' 						=> 'bg-',
+	'color_prefix' 						=> 'color-',
+	'colors' => array ( 
+		'' 								=> '',
+		'White' 						=> 'white',
+		'Offwhite' 						=> 'offwhite',
+		'Light Gray' 					=> 'lightgray',
+		'Gray' 							=> 'gray',
+		'Dark Gray' 					=> 'darkgray',
+		'Light Green' 					=> 'lightgreen',
+		'Dark Green' 					=> 'darkgreen',
+		'Bright Green' 					=> 'brightgreen',
+		'Dark Bright Green' 			=> 'darkbrightgreen',
+		'Yellow' 						=> 'yellow',
+		'Light Orange' 					=> 'lightorange',
+		'Orange' 						=> 'orange',
+		'Dark Orange' 					=> 'darkorange',
+		'Blue' 							=> 'blue',
+		'Dark Blue' 					=> 'darkblue',
+		'Midnight Blue' 				=> 'midnightblue',
+		'Dark Midnight Blue' 			=> 'darkmidnightblue',
+		'Purple' 						=> 'purple',
+		'Dark Purple' 					=> 'darkpurple',
+		'Red' 							=> 'red',
+		'Bright Red' 					=> 'brightred',
+		'Dark Red' 						=> 'darkred',
+		'Almost Black' 					=> 'almostblack',
+		'Not Quite Black' 				=> 'notquiteblack',
+		'Black' 						=> 'black'
+	),
+
+/*
+	'paddings' => array( 
+		'' 								=> '',
+		'Narrow (Sidebar)' 				=> 'padding',
+		'Wide (Full-width)'				=> 'section'
+	),
+*/
+	// NOTE: These values must be unique
+	//'paddings_prefix' => '',
+/*
+	'paddings' => array( 
+		'section' 						=> 'section',
+		'padding' 						=> 'padding'
+	),
+*/
+
+	// This maps a widget area name to the corresponding padding above
+	'paddings_map' => array (
+		'Page Top'						=> 'section',
+		'Page Bottom'					=> 'section',
+		'Home Page'						=> 'section',
+		'Footer'						=> 'padding',
+		'Sidebar'						=> 'padding'
+	),
+
+	// Bootstrap text alignments (text-left, text-center, etc.)
+	//'alignment_prefix' => 'text-',
+	'alignments' => array ( 
+		'' 								=> '',
+		'Left' 							=> 'text-left',
+		'Center' 						=> 'text-center',
+		'Justified' 					=> 'text-justified',
+		'Right' 						=> 'text-right'
+	),
+
+	// Font-awsome sizes. These are in "em's". 
+	//'size_prefix' => 'fa-',
+	'sizes' => array ( 
+		'5x'							=> '5x',
+		'4x'							=> '4x',
+		'3x'							=> '3x', 
+		'2x'							=> '2x', 
+		'1x'							=> '1x', 
+		'Fixed Width'					=> 'fw' 
+	),
+
+	// Bootstrap buttons plus our inverse, hollow, and transparent ones we added
+	//'button_prefix' => 'btn-',
+	'buttons' => array ( 
+		'Default' 						=> 'btn-default',
+		'Primary'						=> 'btn-primary',
+		'Success' 						=> 'btn-success',
+		'Info' 							=> 'btn-info',
+		'Warning' 						=> 'btn-waring',
+		'Danger' 						=> 'btn-danger',
+		'Inverse' 						=> 'btn-inverse',
+		'Outline' 						=> 'btn-hollow',
+		'Transparent'					=> 'btn-transparent',
+		'Link' 							=> 'btn-link'
+	),
+
+	// Number of columns for the columns widget. Should be 2, 4, or 6.
+	'max_columns' => 4
+
 );
-if ( isset( $xsbf_plugin_options ) ) {
-	$xsbf_plugin_options = wp_parse_args( $xsbf_plugin_options, $xsbf_plugin_defaults );
-} else {
-	$xsbf_plugin_options = $xsbf_plugin_defaults;
-}
 
-/*
- * Load our plugin's stylesheet unless its already loaded by one of our themes
+/**
+ * MERGE PLUGIN DEFAULTS WITH ANY OVERRIDES
+ *
+ * These can be overrided in your own plugin or theme's function.php file by setting
+ * values in $xsbf_plugin_options. Your values will be merged with the defaults.
  */
-/*
-if ( $xsbf_plugin_options['css'] AND ! function_exists ( 'xsbf_scripts' ) ) {
-
-	// Add our plugin's stylesheet to the front-end. The '20' ensures this runs
-	// after the theme's setup routines.
-	add_action( 'wp_enqueue_scripts', 'xsbf_plugin_styles', 20 );
-	function xsbf_plugin_styles() {
-		//if ( ! wp_style_is( 'theme-flat', 'enqueued' ) ) {
-			wp_register_style( 'theme-flat', plugins_url( 'flat-bootstrap/css/theme-flat.css' ), $deps = null, '20150114', 'all' );
-			wp_enqueue_style( 'theme-flat');
-		//}
-	}
-	
-	// Add our plugin's stylesheet to the backend (WordPress editor)
-	add_action( 'after_setup_theme', 'xsbf_plugin_setup_theme', 20 );
-	function xsbf_plugin_setup_theme() {
-		add_editor_style( plugins_url( 'flat-bootstrap/css/theme-flat.css' ) );
-	}
-	
-}
-*/
+if ( ! isset($xsbf_plugin_options) ) $xsbf_plugin_options = null;
+$xsbf_plugin_options = wp_parse_args( $xsbf_plugin_options, $xsbf_plugin_defaults );
 
 /*
- * Load our quicktags for the WordPress editor
+ * LOAD EACH OF OUR MODULES AS DEFINED BY THE PLUGIN OPTIONS
  */
-/*
-if ( $xsbf_plugin_options['quicktags'] ) {
-	include_once( 'quicktags.php' );
-}
-*/
-
-/*
- * Load our colored section widget and [flat_bootstrap_section] shortcode
- */
-if ( $xsbf_plugin_options['widget-section'] ) {
-	include_once( 'xsbf-widget-section.php' );
-}
-
-/*
- * Load our icon columns widget and [flat_bootstrap_columns] shortcode
- */
-if ( $xsbf_plugin_options['widget-columns'] ) {
-	include_once( 'xsbf-widget-columns.php' );
+foreach ( $xsbf_plugin_options['modules'] as $module ) {
+	@include_once $module; // @ suppresses errors if file doesn't exist
 }

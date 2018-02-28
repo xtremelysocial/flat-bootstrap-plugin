@@ -1,5 +1,7 @@
 <?php
 
+//ini_set ( 'display_errors', 1 ); //TEST
+
 /** 
  * Tell WordPress to instantiate this widget
  */
@@ -21,23 +23,33 @@ class XS_Columns_Widget extends WP_Widget {
 	public function __construct() {
 		parent::__construct(
 	 		'XS_Columns_Widget',
-			'FB Columns Widget',
+			'Flat Columns',
 			array( 'description' => __( 'Colored section with columns of icons and/or text' ) 
 			)
 		);
+		//global $xsbf_plugin_options;		
 	 }
-	
-	/**
-	 * Note that protected variable declarations at the very end due to their length.
-	 * e.g. $colors, $alignments, $styles, $icons.
-	 */
 
 	/** 
 	 * Main function to display the widget on the front-end
 	 */
 	function widget($args, $instance) {
 	
-		// Get widget area settings, such as before/after widget, before/after title
+		// Extract some of our theme options to discreet variables
+		global $xsbf_plugin_options;
+		
+	    $widget_classes = $xsbf_plugin_options['widget_classes'];
+	    $color_prefix = $xsbf_plugin_options['color_prefix'];
+	    //$alignment_prefix = $xsbf_plugin_options['alignment_prefix'];
+	    $max_columns = $xsbf_plugin_options['max_columns'];
+
+		// Extract some of our local variables
+	    $fa_prefix = $this->fa_prefix;
+	    echo "<p>fa_prefix='{$fa_prefix}'</p>"; //TEST
+	    $icon_prefix = $this->icon_prefix;
+	    //$icon_large = $this->icon_large;
+
+		// Extract $args into individual variables. Eg $args['name'] to $name.
 	    extract( $args );
 
 		// Get this specific widget instance's parameters
@@ -46,105 +58,163 @@ class XS_Columns_Widget extends WP_Widget {
 		$bgcolor = htmlspecialchars($instance['bgcolor']);
 		$alignment = htmlspecialchars($instance['alignment']);
 		$text = apply_filters( 'widget_text', empty( $instance['text'] ) ? '' : $instance['text'], $instance );
+		$text = do_shortcode( $text ); //allow shortcodes
 		$icon_color = htmlspecialchars($instance['icon_color']);
-		$btn_text = htmlspecialchars($instance['btn_text']);
-		$btn_style = htmlspecialchars($instance['btn_style']);
-		$btn_url = htmlspecialchars($instance['btn_url']);
+		$icon_size = htmlspecialchars($instance['icon_size']);
+		//$btn_text = htmlspecialchars($instance['btn_text']);
+		//$btn_style = htmlspecialchars($instance['btn_style']);
+		//$btn_url = htmlspecialchars($instance['btn_url']);
 
-		// Loop through this for each column
-		for ($col = 1; $col <= $this->max_columns; $col++) {
+		// Loop through this for each column and build individual fields from the array
+		$num_columns = 0; $icons_only = true;
+		for ($col = 1; $col <= $max_columns; $col++) {
+
 			$col_title[$col] = strip_tags($instance['col_title_' . $col]);
 
 			// Allow HTML if user is authorized. Note wp_filter_post_kses() expects slashed.
-			if ( current_user_can('unfiltered_html') ) {
+			$col_text[$col] = do_shortcode( $col_text[$col] ); //allow shortcodes
+			//if ( current_user_can('unfiltered_html') ) {
 				$col_subtitle[$col] = $instance['col_subtitle_' . $col];
 				$col_text[$col] = $instance['col_text_' . $col];
-			} else { 
+			/*} else { 
 				$col_subtitle[$col] = stripslashes( wp_filter_post_kses( addslashes($instance['col_subtitle_' . $col]) ) ); 		
 				$col_text[$col] = stripslashes( wp_filter_post_kses( addslashes($instance['col_text_' . $col]) ) );
-			} //endif current_user_can()
+			}*/ //endif current_user_can()
+
 			$col_icon[$col] = stripslashes($instance['col_icon_' . $col]);
+			$col_btn_text[$col] = stripslashes($instance['col_btn_text_' . $col]);
+			$col_btn_style[$col] = stripslashes($instance['col_btn_style_' . $col]);
 			$col_url[$col] = stripslashes($instance['col_url_' . $col]);
-		} //endfor		
-
-		// Output the widget
-		echo $before_widget;
+			
+			if ( $col_title[$col] OR $col_subtitle[$col] OR $col_text[$col] ) $icons_only = false;
+			//if ( $col_text[$col] ) $icons_only = false;
+			if ( $col_title[$col] OR $col_subtitle[$col] OR $col_text[$col] OR $col_icon[$col] ) $num_columns++;
+			
+		} //endfor	
 		
-		// If Page Top or Page Bottom Widget area, then kill off container and
-		// add it later after the colored section div
-		// TO-DO: For shortcode, check whether full-width page!
-		$container_needed = $padding_needed = false;
-		if ( $name == 'Page Top' OR $name == 'Page Bottom' ) {
-			echo '</div><!-- container -->';		
-			$container_needed = true;
+		//echo 'icons_only=' . $icons_only . '<br />'; //TEST	
 
-		// Otherwise, if a background color is selected, then need to add padding
-		} elseif ( $name AND $bgcolor ) {
-			$padding_needed = true;
+		// Start the widget HTML
 
-		// Otherwise, this is being called from a shortcode and we need a container
-		} else {
-			$container_needed = true;
-		} //endif $name
+/*
+		// Add colors and alignment to widget section
+		$classes = $widget_classes
+			. ( $bgcolor ? ' ' . $color_prefix . $bgcolor : '' )
+			.( ( $alignment AND $alignment != 'left' ) ? ' ' . $alignment_prefix . $alignment : '' );
+
+		// Apply filter to allow themes and plugins to override widget classes. To add a
+		// filter, use: add_filter ( 'xsbf_widget_classes', my_widget_classes, 10, 3 );
+		// The 10 is the priority and the 3 says to accept all 4 arguments.
+		$classes = apply_filters ( 'xsbf_widget_classes', $classes, 'widget_xs_columns_widget', $args, $instance );
+
+		$before_widget = str_ireplace( 'widget_xs_columns_widget', 'widget_xs_columns_widget ' . $classes, $before_widget ); 
+*/
+
+		echo $before_widget;
 
 		// Display the widget title and other fields		
-		echo '<div class="section ' 
-			.( $bgcolor ? 'bg-' . $bgcolor . ' ' : '' )
-			.( ( $alignment AND $alignment != 'left' ) ? 'align' . $alignment . ' ' : '' )
-			.( $padding_needed ? 'padding' : '' )
-			.'">';
-		if ( $container_needed ) echo '<div class="container">';
-
 		if ( $title ) echo $before_title . $title . $after_title;
 		if ( $subtitle ) echo '<h3>' . $subtitle . '</h3>'; 
 		if ( $text ) echo '<p>' . $text . '</p>'; 
+		//if ( $btn_url AND $btn_text ) echo '<p><a href="' . $btn_url . '" class="btn btn-lg btn-' . $btn_style .'">' . $btn_text . '</a></p>'; 
 
-		if ( $btn_url AND $btn_text ) echo '<p><a href="' . $btn_url . '" class="btn btn-lg btn-' . $btn_style .'">' . $btn_text . '</a></p>'; 
+		// Determine what column style to use if any based on the widget area and number
+		// of columns in this widget instance itself.
+/*
+		// If in the Sidebar, collapse to a single column. Assuming this for all themes 
+		// is reasonable.
+		if ( strtolower ( $name ) == 'sidebar' ) {
+			$col_style = 'col-xs-12 centered'; 
+		// If in the footer, assume theme already handles columns and don't add any column
+		// logic at all. Handle variations of FooterX as well. This should be a reasonable 
+		// assumption for most themes.
+		} elseif ( strpos( strtolower ( $name ), 'footer' ) !== false ) {
+			$col_style = '';
+		// For columns with text, make it 2 rows of 2 columns on a portrait tablet display
+		} elseif ( $num_columns == 4 AND !$icons_only ) {
+			$col_style = 'col-sm-6 col-lg-3 centered';
+		// For columns with icons only, display them in columns even on smartphones
+		} elseif ( $icons_only ) {
+			//$col_style = 'col-xs-6 centered';
+			$col_style = 'col-xs-' . ( 12 / $num_columns ) . ' centered';
+		// Otherwise, just make it the number of columns specified
+		} else {
+			$col_style = 'col-sm-' . ( 12 / $num_columns ) . ' centered';
+		}
+*/
+		// If in the Sidebar, collapse to a single column.
+		if ( strtolower ( $name ) == 'sidebar' ) {
+			$col_style = 'col-xs-12 centered'; 
+		// In the footer, columns are already handled so don't do anything to them
+		//} elseif ( strpos( strtolower ( $name ), 'footer' ) !== false ) {
+		} elseif ( strtolower ( $name ) == 'footer' ) {
+			$col_style = '';
+		// For columns with text, make it 2 rows of 2 columns on a portrait tablet display
+		} elseif ( $num_columns == 4 AND !$icons_only ) {
+			$col_style = 'col-sm-6 col-lg-3 centered';
+		// For columns with icons only, display them in columns even on smartphones
+		} elseif ( $icons_only ) {
+			//$col_style = 'col-xs-6 centered';
+			$col_style = 'col-xs-' . ( 12 / $num_columns ) . ' centered';
+		// Otherwise, just make it the number of columns specified
+		} else {
+			$col_style = 'col-sm-' . ( 12 / $num_columns ) . ' centered';
+		}
 
-		// First count which columns are not empty, so we can adjust the grid
-		$num_columns = 0; $col_title_or_text = false;
-		for ($col = 1; $col <= $this->max_columns; $col++) {
-			if ( $col_title[$col] OR $col_subtitle[$col] OR $col_text[$col] OR $col_icon[$col] ) $num_columns++;
-			if ( $col_title[$col] OR $col_subtitle[$col] OR $col_text[$col] ) $col_title_or_text = true;
-		} //endfor
-		//$num_columns = 4; // TEST
-		
-		// Set the Bootstrap grid column class based on number of columns. For 4 
-		// columns where we have a title or text, make it 2 column on iPad.
-		if ( $num_columns = 4 AND $col_title_or_text ) $col_style = 'col-sm-6 col-lg-3 centered';
-		else $col_style = 'col-sm-' . ( 12 / $num_columns ) . ' centered';
+		// Allow our theme and others to override the column logic. To override, 
+		// use: add_filter ( 'xsbf_narrow_widget_area', my_narrow_widget_area, 10, 3 );
+		// Note that to disable columns altogether (as in a Footer that already has 
+		// columns, set $col_style to blank.
+		$col_style = apply_filters ( 'xsbf_widget_column_style', $col_style, 'widget_xs_columns_widget', $args );
 
 		// Loop through all columns and apply Bootstrap grid to them
-		for ($col = 1; $col <= $this->max_columns; $col++) {
-			if ( $col == 1 ) echo '<div class="row">';
+		for ($col = 1; $col <= $xsbf_plugin_options['max_columns']; $col++) {
+			if ( $col_style AND $col == 1 ) echo '<div class="row">';
 			
 			if ( $col_title[$col] OR $col_subtitle[$col] OR $col_text[$col] OR $col_icon[$col] ) {
-				echo '<div class="' . $col_style . '">';
+				if ( ! $icons_only ) echo '<div' 
+					.( $col_style ? ' class="' . $col_style . '"' : '' )
+					.'>';
 
 				if ( $col_title[$col] ) echo '<h2>' . $col_title[$col] . '</h2>';
 				if ( $col_url[$col] AND $col_icon[$col] ) {
-					echo '<a href="' . $col_url[$col] 
-						. '" class="fa icon-xlg fa-' . $col_icon[$col]
-						.( $icon_color ? ' color-' . $icon_color : '' )
-						. '"></a>';
+					echo '<a href="' . $col_url[$col] . '">'
+						//.'<i class="fa fa-4x fa-' . $col_icon[$col]
+						//.'<i class="' . $icon_large . ' ' . $icon_prefix . $col_icon[$col]
+						//.'<i class="fa fa-fw ' 
+						.'<i class="' . $fa_prefix 
+						.( $icon_size ? $icon_prefix . $icon_size : '' )
+						.' ' . $icon_prefix . $col_icon[$col]
+						.( $icon_color ? ' ' . $color_prefix . $xsbf_plugin_options['colors'][$icon_color] : '' )
+						.'">&nbsp;</i>'
+						.'</a>'; 
 				} elseif ( $col_icon[$col] ) {
-					echo '<i class="fa icon-xlg fa-' . $col_icon[$col] 
-									.( $icon_color ? ' color-' . $icon_color : '' )
-									. '"></i>';			
+					//echo '<i class="fa fa-4x fa-' . $col_icon[$col]
+					//echo '<i class="' . $icon_large . ' ' . $icon_prefix . $col_icon[$col]
+					//echo '<i class="fa fa-fw ' 
+					echo '<i class="' . $fa_prefix 
+						.($icon_size ? $icon_prefix . $icon_size : '' ) 
+						.' ' . $icon_prefix . $col_icon[$col]
+						.( $icon_color ? ' ' . $color_prefix . $xsbf_plugin_options['colors'][$icon_color] : '' )
+						. '">&nbsp;</i>';			
 				} //endif $col_url
 				if ( $col_subtitle[$col] ) echo '<h3>' . $col_subtitle[$col] . '</h3>';
 				if ( $col_text[$col] ) echo '<p>' . $col_text[$col] . '</p>';
+
+				//if ( $col_btn_text[$col] ) echo '<p>' . $col_btn_text[$col] . '</p>';
+				if ( $col_url[$col] AND $col_btn_text[$col] ) {
+					echo '<a href="' . $col_url[$col] . '" class="btn btn-lg ' . $xsbf_plugin_options['buttons'][$col_btn_style[$col]] .'">' . $col_btn_text[$col] . '</a>';
+				}
 			
-				echo '</div><!-- col -->';
+				if ( ! $icons_only ) echo '</div><!-- col -->';
+				
+				if ( $col_style AND !$icons_only AND $num_columns == 4 AND $col == 2 ) echo '<div class="clearfix hidden-lg"></div>';
 
 			} //endif $col_title, etc.
 			
-			if ( $col == $this->max_columns ) echo '</div><!-- row -->';
+			if ( $col_style AND $col == $xsbf_plugin_options['max_columns'] ) echo '</div><!-- row -->';
 		} //endfor		
 		
-		if ( $container_needed ) echo '</div><!-- container -->';
-		echo '</div><!-- section -->';
-
 		echo $after_widget;
 
 	} //endfunction
@@ -154,6 +224,8 @@ class XS_Columns_Widget extends WP_Widget {
 	 */
 	function update( $new_instance, $old_instance ) {
 	
+		global $xsbf_plugin_options;
+
 		$instance = $old_instance;
 		$instance['title'] = strip_tags($new_instance['title']);
 		
@@ -168,12 +240,14 @@ class XS_Columns_Widget extends WP_Widget {
 		$instance['bgcolor'] = stripslashes($new_instance['bgcolor']);
 		$instance['alignment'] = stripslashes($new_instance['alignment']);
 		$instance['icon_color'] = stripslashes($new_instance['icon_color']);
-		$instance['btn_text'] = stripslashes($new_instance['btn_text']);
-		$instance['btn_style'] = stripslashes($new_instance['btn_style']);
-		$instance['btn_url'] = stripslashes($new_instance['btn_url']);
+		$instance['icon_size'] = stripslashes($new_instance['icon_size']);
+		//$instance['btn_text'] = stripslashes($new_instance['btn_text']);
+		//$instance['btn_style'] = stripslashes($new_instance['btn_style']);
+		//$instance['btn_url'] = stripslashes($new_instance['btn_url']);
 		
 		// Loop through this for each column
-		for ($col = 1; $col <= $this->max_columns; $col++) {
+		//for ($col = 1; $col <= $this->max_columns; $col++) {
+		for ($col = 1; $col <= $xsbf_plugin_options['max_columns']; $col++) {
 			$instance['col_title_' . $col] = strip_tags($new_instance['col_title_' . $col]);
 
 			// Allow HTML if user is authorized. Note wp_filter_post_kses() expects slashed.
@@ -185,6 +259,8 @@ class XS_Columns_Widget extends WP_Widget {
 				$instance['col_text_' . $col] = stripslashes( wp_filter_post_kses( addslashes($new_instance['col_text_' . $col]) ) );
 			} //endif current_user_can()
 			$instance['col_icon_' . $col] = stripslashes($new_instance['col_icon_' . $col]);
+			$instance['col_btn_text_' . $col] = stripslashes($new_instance['col_btn_text_' . $col]);
+			$instance['col_btn_style_' . $col] = stripslashes($new_instance['col_btn_style_' . $col]);
 			$instance['col_url_' . $col] = stripslashes($new_instance['col_url_' . $col]);
 		} //endfor		
 				
@@ -195,23 +271,28 @@ class XS_Columns_Widget extends WP_Widget {
 	 * This function displays the widget settings form
 	 */
 	function form( $instance ) {
-	
+
+		global $xsbf_plugin_options;
+			
 		$title = strip_tags($instance['title']);
 		$subtitle = esc_attr($instance['subtitle']);
 		$text = esc_textarea($instance['text']);
 		$bgcolor = stripslashes($instance['bgcolor']);
 		$alignment = stripslashes($instance['alignment']);
 		$icon_color = stripslashes($instance['icon_color']);
-		$btn_text = stripslashes($instance['btn_text']);
-		$btn_style = stripslashes($instance['btn_style']);
-		$btn_url = stripslashes($instance['btn_url']);
+		$icon_size = stripslashes($instance['icon_size']);
+		//$btn_text = stripslashes($instance['btn_text']);
+		//$btn_style = stripslashes($instance['btn_style']);
+		//$btn_url = stripslashes($instance['btn_url']);
 
 		// Loop through this for each column
-		for ($col = 1; $col <= $this->max_columns; $col++) {
+		for ($col = 1; $col <= $xsbf_plugin_options['max_columns']; $col++) {
 			$col_title[$col] = strip_tags($instance['col_title_' . $col]);
 			$col_subtitle[$col] = esc_attr($instance['col_subtitle_' . $col]);
 			$col_text[$col] = esc_attr($instance['col_text_' . $col]);
 			$col_icon[$col] = stripslashes($instance['col_icon_' . $col]);
+			$col_btn_text[$col] = stripslashes($instance['col_btn_text_' . $col]);
+			$col_btn_style[$col] = stripslashes($instance['col_btn_style_' . $col]);
 			$col_url[$col] = stripslashes($instance['col_url_' . $col]);
 		} //endfor
 ?>
@@ -223,10 +304,12 @@ class XS_Columns_Widget extends WP_Widget {
 		<input class="widefat" id="<?php echo $this->get_field_id('subtitle'); ?>" name="<?php echo $this->get_field_name('subtitle'); ?>" type="text" value="<?php echo $subtitle; ?>" />
 		<br /><small><?php _e('(Subtitle allows basic HTML tags)'); ?></small></p>
 
+<!--
 		<p><label for="<?php echo $this->get_field_id('bgcolor'); ?>"><?php _e('Background Color:'); ?></label>
 		<select class="widefat" id="<?php echo $this->get_field_id('bgcolor'); ?>" name="<?php echo $this->get_field_name('bgcolor'); ?>">
 			<?php 
-			foreach ( $this->colors as $color ) :
+			//foreach ( $this->colors as $color ) :
+			foreach ( $xsbf_plugin_options['colors'] as $color ) :
 			?>
 				<option value="<?php echo esc_attr($color) ?>" <?php selected($color, $bgcolor) ?>><?php echo $color; ?></option>
 			<?php				
@@ -234,23 +317,43 @@ class XS_Columns_Widget extends WP_Widget {
 			?>
         </select>
 		<br /><small><?php _e('(Choose from our color palette)'); ?></small></p>
+-->
 
+<!--
 		<p><label for="<?php echo $this->get_field_id('icon_color'); ?>"><?php _e('Icon Color:'); ?></label>
 		<select class="widefat" id="<?php echo $this->get_field_id('icon_color'); ?>" name="<?php echo $this->get_field_name('icon_color'); ?>">
 			<?php 
-			foreach ( $this->colors as $color ) :
+			//foreach ( $this->colors as $color ) :
+			foreach ( $xsbf_plugin_options['colors'] as $color_option => $color_css ) :
 			?>
-				<option value="<?php echo esc_attr($color) ?>" <?php selected($color, $icon_color) ?>><?php echo $color; ?></option>
+				<option value="<?php echo esc_attr($color_option) ?>" <?php selected($color_option, $icon_color) ?>><?php echo $color_option; ?></option>
 			<?php				
 			endforeach;
 			?>
         </select>
-		<br /><small><?php _e('(Choose from our color palette)'); ?></small></p>
+-->
+		<!-- <br /><small><?php _e('(Choose from our color palette)'); ?></small></p> -->
 
+		<p><label for="<?php echo $this->get_field_id('icon_size'); ?>"><?php _e('Icon Size:'); ?></label>
+		<select class="widefat" id="<?php echo $this->get_field_id('icon_size'); ?>" name="<?php echo $this->get_field_name('icon_size'); ?>">
+			<?php 
+			//foreach ( $this->colors as $color ) :
+			//foreach ( $xsbf_plugin_options['sizes'] as $size ) :
+			foreach ( $xsbf_plugin_options['sizes'] as $size_option => $size_css ) :
+			?>
+				<option value="<?php echo esc_attr($size_option) ?>" <?php selected($size_option, $icon_size) ?>><?php echo $size_option; ?></option>
+			<?php				
+			endforeach;
+			?>
+        </select>
+		<!-- <br /><small><?php _e('(Choose a font size in ems)'); ?></small></p> -->
+
+<!--
 		<p><label for="<?php echo $this->get_field_id('alignment'); ?>"><?php _e('Alignment:'); ?></label>
 		<select class="widefat" id="<?php echo $this->get_field_id('alignment'); ?>" name="<?php echo $this->get_field_name('alignment'); ?>">
 			<?php 
-			foreach ( $this->alignments as $alignment_option ) :
+			//foreach ( $this->alignments as $alignment_option ) :
+			foreach ( $xsbf_plugin_options['alignments'] as $alignment_option ) :
 			?>
 				<option value="<?php echo esc_attr($alignment_option) ?>" <?php selected($alignment_option, $alignment) ?>><?php echo $alignment_option; ?></option>
 			<?php				
@@ -258,18 +361,21 @@ class XS_Columns_Widget extends WP_Widget {
 			?>
         </select>
 		<br /><small><?php _e('(Alignment applies to title, subtitle, and text)'); ?></small></p>
+-->
 
 		<p><label for="<?php echo $this->get_field_id('text'); ?>"><?php _e('Body Text:'); ?></label>
 		<textarea class="widefat" rows="4" cols="20" id="<?php echo $this->get_field_id('text'); ?>" name="<?php echo $this->get_field_name('text'); ?>"><?php echo $text; ?></textarea>
 		<br /><small><?php _e('(Body text allows basic HTML tags)'); ?></small></p>
 
+<!--
 		<p><label for="<?php echo $this->get_field_id('btn_text'); ?>"><?php _e('Button Text (Label):'); ?></label>
 		<input class="widefat" id="<?php echo $this->get_field_id('btn_text'); ?>" name="<?php echo $this->get_field_name('btn_text'); ?>" type="text" value="<?php echo $btn_text; ?>" /></p>
 
 		<p><label for="<?php echo $this->get_field_id('btn_style'); ?>"><?php _e('Button Style:'); ?></label>
 		<select class="widefat" id="<?php echo $this->get_field_id('btn_style'); ?>" name="<?php echo $this->get_field_name('btn_style'); ?>">
 			<?php 
-			foreach ( $this->styles as $style ) :
+			//foreach ( $this->styles as $style ) :
+			foreach ( $xsbf_plugin_options['buttons'] as $style ) :
 			?>
 				<option value="<?php echo esc_attr($style) ?>" <?php selected($style, $btn_style) ?>><?php echo $style; ?></option>
 			<?php				
@@ -277,13 +383,15 @@ class XS_Columns_Widget extends WP_Widget {
 			?>
         </select>
 		<br /><small><?php _e('(Choose from our button styles)'); ?></small></p>
-
+-->
+<!--
 		<p><label for="<?php echo $this->get_field_id('btn_url'); ?>"><?php _e('Button Link (URL):'); ?></label>
 		<input class="widefat" id="<?php echo $this->get_field_id('btn_url'); ?>" name="<?php echo $this->get_field_name('btn_url'); ?>" type="text" value="<?php echo $btn_url; ?>" /></p>
-
+-->
 		<?php
 		// Loop through this section for each column
-		for ($col = 1; $col <= $this->max_columns; $col++) : ?>
+		//for ($col = 1; $col <= $this->max_columns; $col++) :
+		for ($col = 1; $col <= $xsbf_plugin_options['max_columns']; $col++) : ?>
 			<hr>
 			<p><b>Column <?php echo $col; ?></b></p>
 
@@ -301,6 +409,22 @@ class XS_Columns_Widget extends WP_Widget {
 				?>
 			</select></p>
 
+			<p><label for="<?php echo $this->get_field_id('col_btn_text_' . $col); ?>"><?php _e('Button Text:'); //echo ' ' . $col . ':'; ?></label>
+			<input class="widefat" id="<?php echo $this->get_field_id('col_btn_text_' . $col); ?>" name="<?php echo $this->get_field_name('col_btn_text_' . $col); ?>" type="text" value="<?php echo $col_btn_text[$col]; ?>" /></p>
+
+			<p><label for="<?php echo $this->get_field_id('col_btn_style_' . $col); ?>"><?php _e('Button Style:'); ?></label>
+			<select class="widefat" id="<?php echo $this->get_field_id('col_btn_style_' . $col); ?>" name="<?php echo $this->get_field_name('col_btn_style_' . $col); ?>">
+				<?php 
+			foreach ( $xsbf_plugin_options['buttons'] as $button_option => $button_css ) :
+				?>
+					<option value="<?php echo esc_attr($button_option) ?>" <?php selected($button_option, $col_btn_style[$col]) ?>><?php echo $button_option; ?></option>
+				<?php				
+				endforeach;
+				?>
+			</select></p>
+			<!-- <br /><small><?php _e('(Choose from our button styles)'); ?></small></p> -->
+
+
 			<p><label for="<?php echo $this->get_field_id('col_url_' . $col); ?>"><?php _e('Link (URL)'); //echo ' ' . $col . ':'; ?></label>
 			<input class="widefat" id="<?php echo $this->get_field_id('col_url_' . $col); ?>" name="<?php echo $this->get_field_name('col_url_' . $col); ?>" type="text" value="<?php echo $col_url[$col]; ?>" /></p>
 
@@ -314,24 +438,87 @@ class XS_Columns_Widget extends WP_Widget {
 	<?php
 	} // endfunction
 	
+	/**
+	 * Create the [flat_bootstrap_section] shortcode
+	 */
+	public function xs_columns_widget_shortcode( $atts, $text = '' ) {
+	
+		//ini_set ( 'display_errors', 1 ); //TEST
+		
+		global $xsbf_plugin_options;
+
+		$defaults = array (
+			'title' => '',
+			'subtitle' => '',
+			'bgcolor' => '',
+			'alignment' => 'center',
+			//'text' => '',
+			'text' => $text,
+			'icon_color' => '',
+			'icon_size' => '',
+			//'btn_text' => '',
+			//'btn_style' => 'primary',
+			//'btn_url' => ''
+		);
+
+		// Loop through this for each column
+		for ($col = 1; $col <= $xsbf_plugin_options['max_columns']; $col++) {
+			$defaults['col_title_' . $col] = ''; 
+			$defaults['col_subtitle_' . $col] = '';
+			$defaults['col_text_' . $col] = '';
+			$defaults['col_icon_' . $col] = '';
+			$defaults['col_btn_text_' . $col] = '';
+			$defaults['col_btn_style_' . $col] = '';
+			$defaults['col_url_' . $col] = '';
+		} //endfor
+
+		$args = shortcode_atts( $defaults, $atts, 'flat_bootstrap_columns' );
+		//print_r( $args ); //TEST
+		
+		// To help users with "debugging" use of this shortcode, display a message
+		// if they didn't fill out the parameters correctly.
+		if ( !$args['title'] AND !$args['subtitle'] AND !$args['text'] ) $args['text'] = __( 'You need to add some parameters and/or text, such as &lbrack;flat_bootstrap_columns title="MY TITLE" subtitle="My Subtitle" col_icon_1="facebook" col_icon_2="twitter" col_icon_3="google-plus"&rbrack;This is just an example.&lbrack;/flat_bootstrap_columns&rbrack;' );
+	
+		// Since the widget uses "echo", collect up all that to return at the end
+		ob_start();
+
+		// Allow themes or plugins to alter this. Note we also pass the args so that the
+		// filter has all the paremeters to work with if needed. To add a filter, use:
+		// add_filter ( 'xsbf_widget_area_defaults', my_widget_area_defaults, 10, 3 );
+		// The 10 is the priority and the 3 says to accept all 3 arguments.
+		$widget_area_defaults = array(
+			'before_widget' => '<div class="widget widget_xs_columns_widget"><div class="container-fluid">',
+			'before_title' 	=> '<h2 class="widget-title">',
+			'after_title' 	=> '</h2>',
+			'after_widget' 	=> '</div></div>'
+		);
+		$widget_area_defaults = apply_filters ( 'xsbf_widget_area_defaults', $widget_area_defaults, 'widget_xs_columns_widget', $args );
+
+		// The first parameter to the widget is the default widget area fields
+		// such as before_widget, before_title, etc. The second parameter is the
+		// actual shortcode arguments to use to build the widget content.
+		$xs_columns_widget = new XS_Columns_Widget();
+		$xs_columns_widget->widget( $widget_area_defaults, $args );
+
+		// Take the echo'd output, flush the buffer, and return the output
+		$return = ob_get_contents();	
+		ob_end_clean();
+		
+		//ini_set ( 'display_errors', 0 ); //TEST
+
+		return $return;
+
+	} //endfunction
+
 	/* 
-	 * Declare some protected variables for use in our class functions
+	 * Declare the $icons here at the end simply because it is a huge list
 	 */
 
-	// Set the maximum number of columns to support. Start with 4 but could be
-	// up to 6 and still fit the Bootstrap grid.
-	protected $max_columns = 4;
-
-	// Our color palette (colors renamed from Flat UI palette)
-	protected $colors = array ( '', 'white', 'offwhite', 'lightgray', 'gray', 'darkgray', 'lightgreen', 'darkgreen', 'brightgreen', 'darkbrightgreen', 'yellow', 'lightorange', 'orange', 'darkorange', 'blue', 'darkblue', 'purple', 'darkpurple', 'midnightblue', 'darkmidnightblue', 'red', 'brightred', 'darkred', 'almostblack', 'notquiteblack', 'black' );
-
-	// WordPress core theme (_S)
-	protected $alignments = array( '', 'left', 'center', 'right' );
-	
-	// Bootstrap v3.3.2 (http://getbootstrap.com) plus our btn-hollow and btn-transparent	
-	protected $styles = array( 'primary', 'success', 'info', 'warning', 'danger', 'hollow', 'default', 'link' ); 
-
 	// Font Awesome 4.3.0 by @davegandy - http://fontawesome.io - @fontawesome
+	//protected $fa_prefix = 'fa fa-fw '; 
+	protected $fa_prefix = 'fa '; 
+	protected $icon_prefix = 'fa-'; 
+	//protected $icon_large = 'fa-4x'; 
 	protected $icons = array( 
 		'', 
 		'adjust', 
@@ -928,68 +1115,7 @@ class XS_Columns_Widget extends WP_Widget {
 		'youtube-play', 
 		'youtube-square' 
 		); 
-
-	/**
-	 * Create the [flat_bootstrap_section] shortcode
-	 */
-	public function xs_columns_widget_shortcode( $atts ) {
-	
-		//ini_set ( 'display_errors', 1 ); //TEST
-
-		// Create a widget instance
-		$xs_columns_widget = new XS_Columns_Widget();
-
-		$defaults = array (
-			'title' => '',
-			'subtitle' => '',
-			'bgcolor' => '',
-			'alignment' => 'center',
-			'text' => '',
-			'icon_color' => '',
-			'btn_text' => '',
-			'btn_style' => 'primary',
-			'btn_url' => ''
-		);
-
-		// Loop through this for each column
-		for ($col = 1; $col <= $xs_columns_widget->max_columns; $col++) {
-			$defaults['col_title_' . $col] = ''; 
-			$defaults['col_subtitle_' . $col] = '';
-			$defaults['col_text_' . $col] = '';
-			$defaults['col_icon_' . $col] = '';
-			$defaults['col_url_' . $col] = '';
-		} //endfor
-
-		$args = shortcode_atts( $defaults, $atts, 'flat_bootstrap_columns' );
-		//print_r( $args ); //TEST
-		
-		// To help users with "debugging" use of this shortcode, default in some
-		// text if they didn't fill out the parameters correctly.
-		if ( !$args['title'] AND !$args['subtitle'] AND !$args['text'] ) $args['text'] = __( 'You need to add some parameters, such as &lbrack;flat_bootstrap_columns title="MY TITLE" subtitle="My Subtitle" text="This is just an example"&rbrack;' );
-	
-		// Since the widget uses "echo", collect up all that to return at the end
-		ob_start();
-
-		// The first parameter to the widget is the default widget area fields
-		// such as before_widget, before_title, etc. We need to mirror the 
-		// settings from the actual Page Top widget area. The second parameter 
-		// is the actual shortcode arguments to use to build the widget content.
-		$widget_area_defaults = array(
-			'before_widget' => '<div class="widget widget_xs_section_widget clearfix">',
-			'before_title' 	=> '<h2 class="widget-title">',
-			'after_title' 	=> '</h2>',
-			'after_widget' 	=> '</div>',
-		);
-		$xs_columns_widget->widget( $widget_area_defaults, $args );
-
-		// Take the echo'd output, flush the buffer, and return the output
-		$return = ob_get_contents();	
-		ob_end_clean();
-		
-		//ini_set ( 'display_errors', 0 ); //TEST
-
-		return $return;
-
-	} //endfunction
 	
 } //endclass
+
+//ini_set ( 'display_errors', 0 ); //TEST
