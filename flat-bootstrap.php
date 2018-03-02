@@ -3,15 +3,15 @@
 Plugin Name: Flat Bootstrap Widgets
 Plugin URI:  http://xtremelysocial.com/wordpress/flat-bootstrap-widgets/
 Description: Add awesome colored backgrounds to your widgets with various padding options to make your widget areas look great.
-Author: 	 Tim Nicholson
+Author: 	   Tim Nicholson
 Author URI:  http://xtremelysocial.com
-Version: 	 1.0
-License: 	 GNU General Public License
+Version: 	   1.0
+License: 	   GNU General Public License
 License URI: http://www.opensource.org/licenses/GPL-3.0
 
-Flat Bootstrap Plugin, Copyright (C) 2015 XtremelySocial
+Flat Bootstrap Plugin, Copyright (C) 2018 XtremelySocial
 Flat Bootstrap Plugin is licensed under the GPL.
-See readme.txt file for license information on components used in this theme.
+See readme.txt file for license information on components used in this plugin.
 */
 
 /**
