@@ -1,2 +1,10 @@
 .DS_Store
 zz_unused
+
+*.worksheet
+
+*.bbprojectdata
+
+flat-bootstrap-plugin.bbprojectd/Scratchpad.txt
+
+*.bbprojectsettings

@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin: Flat Bootstrap Plugin
+ * Plugin: Flat Bootstrap Widgets
  *
  * Main class and code for our CSS widget and shortcode [flat_bootstrap_section]
  * shortcode.
@@ -266,9 +266,6 @@ function xsbf_filter_widget( $params ) {
 
 		//echo '<p>In xsbf_filter_widget() and there are extra widget parameters</p>'; //TEST 
 		
-		//$xsbf_widgetcss_options[$params[0]['widget_id'] = str_replace ( 'padding', '', $xsbf_widgetcss_options[$params[0]['widget_id'] ); //TEST
-		//$xsbf_widgetcss_options[$params[0]['widget_id'] = str_replace ( 'section', '', $xsbf_widgetcss_options[$params[0]['widget_id'] ); //TEST
-
 		/* Add default widget_css, if specified */
 		$xsbf_widgetcss_options[$params[0]['widget_id']] .= ' ' .  $xsbf_plugin_options['widget_classes'];
 

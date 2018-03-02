@@ -1,4 +1,4 @@
-=== Flat Bootstrap ===
+=== Flat Bootstrap Widgets ===
 Contributors: timnicholson
 Tags: colors, widgets, flat
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=JGJUJVK99KHRE

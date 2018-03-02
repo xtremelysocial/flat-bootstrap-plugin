@@ -45,7 +45,7 @@ class XS_Columns_Widget extends WP_Widget {
 
 		// Extract some of our local variables
 	    $fa_prefix = $this->fa_prefix;
-	    echo "<p>fa_prefix='{$fa_prefix}'</p>"; //TEST
+	    //echo "<p>fa_prefix='{$fa_prefix}'</p>"; //TEST
 	    $icon_prefix = $this->icon_prefix;
 	    //$icon_large = $this->icon_large;
 
@@ -118,30 +118,6 @@ class XS_Columns_Widget extends WP_Widget {
 		if ( $text ) echo '<p>' . $text . '</p>'; 
 		//if ( $btn_url AND $btn_text ) echo '<p><a href="' . $btn_url . '" class="btn btn-lg btn-' . $btn_style .'">' . $btn_text . '</a></p>'; 
 
-		// Determine what column style to use if any based on the widget area and number
-		// of columns in this widget instance itself.
-/*
-		// If in the Sidebar, collapse to a single column. Assuming this for all themes 
-		// is reasonable.
-		if ( strtolower ( $name ) == 'sidebar' ) {
-			$col_style = 'col-xs-12 centered'; 
-		// If in the footer, assume theme already handles columns and don't add any column
-		// logic at all. Handle variations of FooterX as well. This should be a reasonable 
-		// assumption for most themes.
-		} elseif ( strpos( strtolower ( $name ), 'footer' ) !== false ) {
-			$col_style = '';
-		// For columns with text, make it 2 rows of 2 columns on a portrait tablet display
-		} elseif ( $num_columns == 4 AND !$icons_only ) {
-			$col_style = 'col-sm-6 col-lg-3 centered';
-		// For columns with icons only, display them in columns even on smartphones
-		} elseif ( $icons_only ) {
-			//$col_style = 'col-xs-6 centered';
-			$col_style = 'col-xs-' . ( 12 / $num_columns ) . ' centered';
-		// Otherwise, just make it the number of columns specified
-		} else {
-			$col_style = 'col-sm-' . ( 12 / $num_columns ) . ' centered';
-		}
-*/
 		// If in the Sidebar, collapse to a single column.
 		if ( strtolower ( $name ) == 'sidebar' ) {
 			$col_style = 'col-xs-12 centered'; 
@@ -162,7 +138,7 @@ class XS_Columns_Widget extends WP_Widget {
 		}
 
 		// Allow our theme and others to override the column logic. To override, 
-		// use: add_filter ( 'xsbf_narrow_widget_area', my_narrow_widget_area, 10, 3 );
+		// use: add_filter ( 'xsbf_widget_column_style', my_widget_column_style, 10, 3 );
 		// Note that to disable columns altogether (as in a Footer that already has 
 		// columns, set $col_style to blank.
 		$col_style = apply_filters ( 'xsbf_widget_column_style', $col_style, 'widget_xs_columns_widget', $args );

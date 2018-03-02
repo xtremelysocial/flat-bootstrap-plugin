@@ -1,7 +1,7 @@
 <?php
 /**
-Plugin Name: Flat Bootstrap
-Plugin URI:  http://xtremelysocial.com/wordpress/flat-bootstrap-plugin/
+Plugin Name: Flat Bootstrap Widgets
+Plugin URI:  http://xtremelysocial.com/wordpress/flat-bootstrap-widgets/
 Description: Add awesome colored backgrounds to your widgets with various padding options to make your widget areas look great.
 Author: 	 Tim Nicholson
 Author URI:  http://xtremelysocial.com
@@ -42,57 +42,41 @@ $xsbf_plugin_defaults = array(
 	// Our flat color palette (colors renamed from Flat UI palette and additional ones
 	// added)
 	'bg_prefix' 						=> 'bg-',
-	'color_prefix' 						=> 'color-',
+	'color_prefix' 					=> 'color-',
 	'colors' => array ( 
-		'' 								=> '',
+		'' 							=> '',
 		'White' 						=> 'white',
-		'Offwhite' 						=> 'offwhite',
+		'Offwhite' 					=> 'offwhite',
 		'Light Gray' 					=> 'lightgray',
-		'Gray' 							=> 'gray',
+		'Gray' 						=> 'gray',
 		'Dark Gray' 					=> 'darkgray',
 		'Light Green' 					=> 'lightgreen',
 		'Dark Green' 					=> 'darkgreen',
-		'Bright Green' 					=> 'brightgreen',
+		'Bright Green' 				=> 'brightgreen',
 		'Dark Bright Green' 			=> 'darkbrightgreen',
 		'Yellow' 						=> 'yellow',
-		'Light Orange' 					=> 'lightorange',
+		'Light Orange' 				=> 'lightorange',
 		'Orange' 						=> 'orange',
 		'Dark Orange' 					=> 'darkorange',
-		'Blue' 							=> 'blue',
+		'Blue' 						=> 'blue',
 		'Dark Blue' 					=> 'darkblue',
 		'Midnight Blue' 				=> 'midnightblue',
 		'Dark Midnight Blue' 			=> 'darkmidnightblue',
 		'Purple' 						=> 'purple',
 		'Dark Purple' 					=> 'darkpurple',
-		'Red' 							=> 'red',
+		'Red' 						=> 'red',
 		'Bright Red' 					=> 'brightred',
-		'Dark Red' 						=> 'darkred',
-		'Almost Black' 					=> 'almostblack',
+		'Dark Red' 					=> 'darkred',
+		'Almost Black' 				=> 'almostblack',
 		'Not Quite Black' 				=> 'notquiteblack',
 		'Black' 						=> 'black'
 	),
 
-/*
-	'paddings' => array( 
-		'' 								=> '',
-		'Narrow (Sidebar)' 				=> 'padding',
-		'Wide (Full-width)'				=> 'section'
-	),
-*/
-	// NOTE: These values must be unique
-	//'paddings_prefix' => '',
-/*
-	'paddings' => array( 
-		'section' 						=> 'section',
-		'padding' 						=> 'padding'
-	),
-*/
-
-	// This maps a widget area name to the corresponding padding above
+	// This maps a widget area name to the corresponding padding from the theme
 	'paddings_map' => array (
-		'Page Top'						=> 'section',
+		'Page Top'					=> 'section',
 		'Page Bottom'					=> 'section',
-		'Home Page'						=> 'section',
+		'Home Page'					=> 'section',
 		'Footer'						=> 'padding',
 		'Sidebar'						=> 'padding'
 	),
@@ -100,8 +84,8 @@ $xsbf_plugin_defaults = array(
 	// Bootstrap text alignments (text-left, text-center, etc.)
 	//'alignment_prefix' => 'text-',
 	'alignments' => array ( 
-		'' 								=> '',
-		'Left' 							=> 'text-left',
+		'' 							=> '',
+		'Left' 						=> 'text-left',
 		'Center' 						=> 'text-center',
 		'Justified' 					=> 'text-justified',
 		'Right' 						=> 'text-right'
@@ -121,16 +105,16 @@ $xsbf_plugin_defaults = array(
 	// Bootstrap buttons plus our inverse, hollow, and transparent ones we added
 	//'button_prefix' => 'btn-',
 	'buttons' => array ( 
-		'Default' 						=> 'btn-default',
+		'Default' 					=> 'btn-default',
 		'Primary'						=> 'btn-primary',
-		'Success' 						=> 'btn-success',
-		'Info' 							=> 'btn-info',
-		'Warning' 						=> 'btn-waring',
+		'Success' 					=> 'btn-success',
+		'Info' 						=> 'btn-info',
+		'Warning' 					=> 'btn-waring',
 		'Danger' 						=> 'btn-danger',
-		'Inverse' 						=> 'btn-inverse',
-		'Outline' 						=> 'btn-hollow',
+		'Inverse' 					=> 'btn-inverse',
+		'Outline' 					=> 'btn-hollow',
 		'Transparent'					=> 'btn-transparent',
-		'Link' 							=> 'btn-link'
+		'Link' 						=> 'btn-link'
 	),
 
 	// Number of columns for the columns widget. Should be 2, 4, or 6.
